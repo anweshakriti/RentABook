@@ -62,7 +62,7 @@ class Book(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     title= db.Column(db.String(100), unique=True)
     author=db.Column(db.String(100))
-    isbn= db.Column(db.String(10))
+    isbn= db.Column(db.String(10),unique=True)
 
     def __init__(self,title,author,isbn):
         self.title=title
@@ -122,13 +122,17 @@ def update_book(id):
 
 #================================================ End of BOOK MODEL=================================================#
 
+
+
+
+
 #================================================ RENTAL MODEL=================================================#
 
 #Rental Table
 class Rentals(db.Model):
     __tablename__="rentals"
     book_id=db.Column(db.Integer, db.ForeignKey('book.id'),nullable=False)
-    cardHolder_id=db.Column(db.Integer, db.ForeignKey('cardHolder.id'))
+    cardHolder_id=db.Column(db.Integer, db.ForeignKey('cardHolder.id'),nullable=False)
     id=db.Column(db.Integer, nullable=False,primary_key=True)
 
     def __init__(self,book_id,cardHolder_id):
@@ -144,15 +148,18 @@ class RentalSchema(ma.Schema):
 #Rent a book
 @app.route('/rental', methods=['POST'])
 def rentBook():
-    book_id=request.json['book_id']
-    cardHolder_id=request.json['cardHolder_id']
-    if Book.query.get(book_id) is not None and cardHolder.query.get(cardHolder_id) is not None:
-        new_rent=Rentals(book_id,cardHolder_id)
-        db.session.add(new_rent)
-        db.session.commit()
-        return rent_schema.jsonify(new_rent)
+    if "book_id" in request.json and "cardHolder_id" in request.json:
+        book_id=request.json['book_id']
+        cardHolder_id=request.json['cardHolder_id']
+        if Book.query.get(book_id) is not None and cardHolder.query.get(cardHolder_id) is not None:
+            new_rent=Rentals(book_id,cardHolder_id)
+            db.session.add(new_rent)
+            db.session.commit()
+            return rent_schema.jsonify(new_rent)
+        else:
+            return Response("Invalid Input", status=403, mimetype='application/json')
     else:
-        return Response("Invalid Input", status=403, mimetype='application/json')
+            return Response("<Missing Required Parameters>", status=403, mimetype='application/json')
 
 #init Scheme
 rent_schema = RentalSchema()
@@ -169,4 +176,4 @@ def rentedBooks():
 
 #Run Server
 if __name__=='__main__':
-    app.run(debug=True)
+    app.run(debug=False)
