@@ -18,9 +18,7 @@ db=SQLAlchemy(app)
 #init ma
 ma=Marshmallow(app)
 
-
-
-
+#=================================================CARD HOLDER MODEL-----------------------------------------------------#
 #cardHolder
 class cardHolder(db.Model):
     __tablename__ = "cardHolder"
@@ -35,14 +33,12 @@ class cardHolder(db.Model):
         self.cardNumber=cardNumber
     
 #cardHolderSchema
-
 class cardHolderSchema(ma.Schema):
     class Meta:
         fields=('id','firstName','lastName','cardNumber')
 
 #create CardHolder
 @app.route('/cardHolder', methods=['POST'])
-
 def add_card():
     firstName=request.json['firstName']
     lastName=request.json['lastName']
@@ -56,10 +52,10 @@ def add_card():
 #init Scheme
 cardHolder_schema = cardHolderSchema()
 cardHolders_schema = cardHolderSchema(many=True)
+#================================================ End of CARD HOLDER MODEL=================================================#
 
 
-
-
+#================================================ BOOK MODEL=================================================#
 #Book
 class Book(db.Model):
     __tablename__ = "book"
@@ -74,16 +70,12 @@ class Book(db.Model):
         self.isbn=isbn
 
 #BookSchema
-
 class BookSchema(ma.Schema):
     class Meta:
         fields=('id','title','author','isbn')
 
-
-
 #create book
 @app.route('/book', methods=['POST'])
-
 def add_book():
     title=request.json['title']
     author=request.json['author']
@@ -98,7 +90,6 @@ def add_book():
 #init Scheme
 book_schema = BookSchema()
 books_schema = BookSchema(many=True)
-
 
 #get all books
 @app.route('/book',methods=['GET'])
@@ -115,7 +106,6 @@ def get_book(id):
 
 #update Book
 @app.route('/book/<id>', methods=['PUT'])
-
 def update_book(id):
     book=Book.query.get(id)
     title=request.json['title']
@@ -130,6 +120,11 @@ def update_book(id):
 
     return book_schema.jsonify(book)
 
+#================================================ End of BOOK MODEL=================================================#
+
+#================================================ RENTAL MODEL=================================================#
+
+#Rental Table
 class Rentals(db.Model):
     __tablename__="rentals"
     book_id=db.Column(db.Integer, db.ForeignKey('book.id'),nullable=False)
@@ -140,13 +135,14 @@ class Rentals(db.Model):
         self.book_id=book_id
         self.cardHolder_id=cardHolder_id
 
+#Rental SChema
 class RentalSchema(ma.Schema):
     class Meta:
         fields=('id','book_id','cardHolder_id')
         include_fk = True
 
+#Rent a book
 @app.route('/rental', methods=['POST'])
-
 def rentBook():
     book_id=request.json['book_id']
     cardHolder_id=request.json['cardHolder_id']
@@ -162,18 +158,12 @@ def rentBook():
 rent_schema = RentalSchema()
 rents_schema = RentalSchema(many=True)
 
+#All the Rented book
 @app.route('/rentedBooks', methods=['GET'])
-
 def rentedBooks():
     #rentedBook=session.query(Book,Rentals).filter(Book.id==Rentals.book_id).all()
     rentedBook=Book.query.filter_by(id=Rentals.book_id).all()
     result=books_schema.dump(rentedBook)
-    return jsonify(result)
-
-@app.route('/RentalBooks',methods=['GET'])
-def get_Rentalbooks():
-    all_books=Rentals.query.all()
-    result=rents_schema.dump(all_books)
     return jsonify(result)
 
 
